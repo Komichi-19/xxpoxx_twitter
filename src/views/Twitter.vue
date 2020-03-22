@@ -11,9 +11,9 @@
     </div>
     <div>poweets</div>
     <div v-for="tweets in tweetss" :key="tweets.number">
-      <div>
-        ポイート番号{{ tweets.number }} | ユーザー {{ tweets.user }} |
-        {{ tweets.text }} |
+      <div v-if="tweets.number != 0">
+        ユーザー {{ tweets.user }} | {{ tweets.text }} | {{ tweets.fav }}
+        <button @click="Favorite(tweets.number)">ふぁぼ</button> |
         <button @click="Delete(tweets.number)">Delete</button>
       </div>
     </div>
@@ -28,7 +28,7 @@ export default {
     return {
       tweet: "",
       user: "",
-      tweetss: [{ number: 0, user: "hoge", text: "hoge" }]
+      tweetss: [{ number: 0, user: "", text: "", fav: 0 }]
     };
   },
   methods: {
@@ -37,11 +37,20 @@ export default {
         tweet_text: this.tweet,
         user: this.user
       });
+      this.tweet = "";
+      this.user = "";
+      setTimeout(this.reload(), 100);
     },
     reload() {
       axios.get("api/tweet").then(response => {
         console.log("response" + response.data);
         console.log("tweetss = " + this.tweetss);
+        /*for (let index = 0; index < this.tweetss.length; index++) {
+          this.tweetss[index].number = 0;
+          this.tweetss[index].user = "";
+          this.tweetss[index].text = "";
+        }*/
+        this.tweetss = [{ number: 0, user: "", text: "", fav: 0 }];
         for (let index = response.data.length - 1; index >= 0; index--) {
           /*this.tweetss[index].number = 0;
           this.tweetss[index].user = "hoge";
@@ -52,13 +61,19 @@ export default {
           this.tweetss.push({
             number: response.data[index].number,
             user: response.data[index].user,
-            text: response.data[index].tweet_text
+            text: response.data[index].tweet_text,
+            fav: response.data[index].fav
           });
         }
       });
     },
     Delete(number) {
       axios.delete("api/tweet/" + number);
+      setTimeout(this.reload(), 100);
+    },
+    Favorite(number) {
+      axios.post("api/tweet/" + number);
+      setTimeout(this.reload(), 100);
     }
   }
 };
